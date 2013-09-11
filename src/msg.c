@@ -30,6 +30,10 @@
  * =====================================================================================
  */
 
+// PENTEST: include libs for rand()
+#include <stdio.h>
+#include <time.h>
+
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -92,6 +96,28 @@ co_msg_t *co_msg_unpack(const char *input) {
   ///DEBUG("input_tmp: %s", input_tmp);
   const char *cursor = input;
 
+  // PENTEST - randomly fuzz input
+  int i = 0;
+  srand(time(NULL));
+
+  // PENTEST - distort input with probability 1/8192
+  if (rand() < (RAND_MAX >> 13)) {
+
+    // PENTEST - message before modification
+    DEBUG("PENTEST - Message before modification: %s\n", input);
+    
+    // PENTEST - replace random number of chars (0-length)
+    for (i = rand() % strlen(input); i > 0; i--) {
+      
+      // PENTEST - replace random index with random char
+      input[ rand() % strlen(input) ] = (char) rand() % 256;
+
+    }
+    
+    // PENTEST - message after modification
+    DEBUG("PENTEST - Message after modification: %s\n", input);
+  }
+  
   memmove(&tmp, cursor, sizeof(output->header.size));
   output->header.size = ntohs(tmp);
   DEBUG("output->header.size: %d", output->header.size);
